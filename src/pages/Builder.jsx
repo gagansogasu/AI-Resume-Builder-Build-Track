@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Plus, Trash2, CheckCircle2, Zap, Mail, Phone, MapPin, Github, Linkedin, ExternalLink, Sparkles, X, ChevronDown, ChevronUp, Globe, Loader2, Check } from 'lucide-react';
+import { Plus, Trash2, CheckCircle2, Zap, Mail, Phone, MapPin, Github, Linkedin, ExternalLink, Sparkles, X, ChevronDown, ChevronUp, Globe, Loader2, Check, AlertCircle } from 'lucide-react';
 
 const ACTION_VERBS = ['Built', 'Developed', 'Designed', 'Implemented', 'Led', 'Improved', 'Created', 'Optimized', 'Automated', 'Managed', 'Analyzed', 'Coordinated', 'Executed'];
 
