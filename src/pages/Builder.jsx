@@ -118,19 +118,48 @@ const Builder = () => {
         setTimeout(() => setShowToast(false), 4000);
     };
 
-    // ATS Score Calculation
-    const { score } = useMemo(() => {
+    // ATS Score Calculation (Deterministic)
+    const { score, suggestions } = useMemo(() => {
         let s = 0;
-        if (formData.personalInfo.name && formData.personalInfo.email) s += 20;
-        if (formData.summary.split(/\s+/).length >= 40) s += 15;
-        if (formData.projects.length >= 2) s += 10;
-        if (formData.experience.length >= 1) s += 10;
-        if (formData.skills.technical.length + formData.skills.soft.length + formData.skills.tools.length >= 8) s += 10;
-        if (formData.links.github || formData.links.linkedin) s += 10;
-        const hasNum = [...formData.experience, ...formData.projects].some(p => /[0-9]/.test(p.description));
-        if (hasNum) s += 15;
-        if (formData.education.some(e => e.school)) s += 10;
-        return { score: Math.min(100, s) };
+        const sugs = [];
+
+        // Rules
+        if (formData.personalInfo.name.trim()) s += 10;
+        else sugs.push("Add your full name (+10 points)");
+
+        if (formData.personalInfo.email.trim()) s += 10;
+        else sugs.push("Add an email address (+10 points)");
+
+        if (formData.summary.trim().length > 50) s += 10;
+        else sugs.push("Add a professional summary > 50 chars (+10 points)");
+
+        if (formData.experience.length >= 1 && formData.experience.some(e => e.description.trim().length > 0)) s += 15;
+        else sugs.push("Add experience with detailed bullets (+15 points)");
+
+        if (formData.education.some(e => e.school.trim())) s += 10;
+        else sugs.push("Add an education entry (+10 points)");
+
+        const totalSkills = formData.skills.technical.length + formData.skills.soft.length + formData.skills.tools.length;
+        if (totalSkills >= 5) s += 10;
+        else sugs.push("Add at least 5 skills (+10 points)");
+
+        if (formData.projects.length >= 1) s += 10;
+        else sugs.push("Add at least 1 project (+10 points)");
+
+        if (formData.personalInfo.phone.trim()) s += 5;
+        else sugs.push("Add your phone number (+5 points)");
+
+        if (formData.links.linkedin.trim()) s += 5;
+        else sugs.push("Add your LinkedIn profile (+5 points)");
+
+        if (formData.links.github.trim()) s += 5;
+        else sugs.push("Add your GitHub profile (+5 points)");
+
+        const hasVerbs = ACTION_VERBS.some(v => formData.summary.toLowerCase().includes(v.toLowerCase()));
+        if (hasVerbs) s += 10;
+        else sugs.push("Use action verbs in your summary (+10 points)");
+
+        return { score: Math.min(100, s), suggestions: sugs.slice(0, 3) };
     }, [formData]);
 
     return (
@@ -166,7 +195,7 @@ const Builder = () => {
                         />
                     </Section>
 
-                    <Section title="Projects" onAdd={() => addItem('projects')}>
+                    <Section title="Project Arsenal" onAdd={() => addItem('projects')}>
                         <div className="space-y-4">
                             {formData.projects.map((proj, i) => (
                                 <div key={i} className="border border-gray-100 rounded-[24px] overflow-hidden">
@@ -194,15 +223,35 @@ const Builder = () => {
 
                     <Section title="Experience" onAdd={() => addItem('experience')}>
                         {formData.experience.map((exp, i) => (
-                            <div key={i} className="p-6 bg-gray-50/30 border border-gray-100 rounded-[32px] space-y-4">
+                            <div key={i} className="p-6 bg-gray-50/30 border border-gray-100 rounded-[32px] space-y-4 relative group">
                                 <div className="grid grid-cols-2 gap-4">
                                     <InputField label="Company" value={exp.company} onChange={(v) => handleInputChange('experience', 'company', v, i)} />
                                     <InputField label="Role" value={exp.role} onChange={(v) => handleInputChange('experience', 'role', v, i)} />
                                 </div>
-                                <textarea value={exp.description} onChange={(e) => handleInputChange('experience', 'description', e.target.value, i)} className="w-full h-24 p-4 bg-white border border-gray-100 rounded-2xl text-xs" />
-                                <button onClick={() => removeItem('experience', i)} className="text-red-400 text-[10px] font-bold uppercase">Remove Experience</button>
+                                <textarea value={exp.description} onChange={(e) => handleInputChange('experience', 'description', e.target.value, i)} className="w-full h-24 p-4 bg-white border border-gray-100 rounded-2xl text-xs" placeholder="Describe your impact..." />
+                                <button onClick={() => removeItem('experience', i)} className="absolute top-4 right-4 text-red-200 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"><Trash2 size={16} /></button>
                             </div>
                         ))}
+                    </Section>
+
+                    <Section title="Education" onAdd={() => addItem('education')}>
+                        {formData.education.map((edu, i) => (
+                            <div key={i} className="p-6 bg-gray-50/30 border border-gray-100 rounded-[32px] space-y-4 relative group">
+                                <div className="grid grid-cols-3 gap-4">
+                                    <InputField label="School" value={edu.school} onChange={(v) => handleInputChange('education', 'school', v, i)} />
+                                    <InputField label="Degree" value={edu.degree} onChange={(v) => handleInputChange('education', 'degree', v, i)} />
+                                    <InputField label="Year" value={edu.year} onChange={(v) => handleInputChange('education', 'year', v, i)} />
+                                </div>
+                                <button onClick={() => removeItem('education', i)} className="absolute top-4 right-4 text-red-200 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"><Trash2 size={16} /></button>
+                            </div>
+                        ))}
+                    </Section>
+
+                    <Section title="Links & Social">
+                        <div className="grid grid-cols-2 gap-4">
+                            <InputField label="LinkedIn" value={formData.links.linkedin} onChange={(v) => handleInputChange('links', 'linkedin', v)} placeholder="https://linkedin.com/in/..." />
+                            <InputField label="GitHub" value={formData.links.github} onChange={(v) => handleInputChange('links', 'github', v)} placeholder="https://github.com/..." />
+                        </div>
                     </Section>
                 </div>
             </div>
@@ -224,7 +273,6 @@ const Builder = () => {
                                 className={`group relative w-[110px] aspect-[1/1.4] bg-white rounded-xl border-2 transition-all p-1.5 shadow-sm ${template === t.id ? 'border-primary ring-4 ring-primary/5' : 'border-gray-100 hover:border-gray-200'}`}
                             >
                                 <div className="w-full h-full bg-gray-50 rounded-lg flex flex-col p-2 gap-1 overflow-hidden opacity-40">
-                                    {/* Mini Layout Sketch */}
                                     <div className="h-1.5 w-full bg-gray-200 rounded-full" />
                                     <div className="flex gap-1 h-full">
                                         {t.id === 'Modern' && <div className="w-1/3 bg-gray-200 rounded" />}
@@ -262,103 +310,50 @@ const Builder = () => {
                     </div>
                 </div>
 
-                {/* Score & Export */}
-                <div className="flex justify-between items-center no-print">
-                    <div className="flex items-center gap-4">
-                        <div className="text-3xl font-serif font-bold text-gray-900">{score}%</div>
-                        <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400">ATS Score</div>
+                {/* ATS Score Visualization moved down or shared */}
+                <div className="flex flex-col gap-4 no-print bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm">
+                    <div className="flex justify-between items-center">
+                        <div>
+                            <div className="text-3xl font-serif font-bold text-gray-900">{score}%</div>
+                            <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400">ATS Score</div>
+                        </div>
+                        <div className={`px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest ${score > 70 ? 'bg-green-50 text-green-600' : score > 40 ? 'bg-amber-50 text-amber-600' : 'bg-red-50 text-red-600'}`}>
+                            {score > 70 ? 'Strong Resume' : score > 40 ? 'Getting There' : 'Needs Work'}
+                        </div>
                     </div>
-                    <button onClick={handleDownload} className="px-8 py-3 bg-gray-900 text-white rounded-2xl text-[10px] font-bold uppercase tracking-widest shadow-xl transition-transform active:scale-95">
+                    {suggestions.length > 0 && (
+                        <div className="space-y-2 mt-2">
+                            {suggestions.map((s, i) => (
+                                <p key={i} className="text-[10px] font-medium text-gray-500 flex items-center gap-2">
+                                    <AlertCircle size={10} className="text-amber-500" /> {s}
+                                </p>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                <div className="flex justify-between items-center no-print mt-auto">
+                    <button onClick={handleDownload} className="w-full py-4 bg-gray-900 text-white rounded-2xl text-[10px] font-bold uppercase tracking-widest shadow-xl transition-transform active:scale-95">
                         Download PDF
                     </button>
                 </div>
 
                 {/* Live A4 Preview Rendering */}
                 <div
-                    className={`bg-white aspect-[1/1.414] w-full shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] rounded-sm p-12 transition-all duration-700 origin-top overflow-hidden scale-[0.95] flex flex-col font-sans text-gray-900 ${template === 'Classic' ? 'font-serif' : 'font-sans'}`}
+                    className={`bg-white aspect-[1/1.414] w-full shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] rounded-sm p-12 transition-all duration-700 origin-top overflow-hidden scale-[0.8] flex flex-col font-sans text-gray-900 ${template === 'Classic' ? 'font-serif' : 'font-sans'}`}
                     style={{ borderTop: `4px solid ${accentColor}` }}
                 >
-                    {/* Template Logic Rendering */}
-                    {template === 'Modern' ? (
-                        <div className="flex h-full -m-12">
-                            <div className="w-[32%] p-10 flex flex-col gap-8 text-white" style={{ backgroundColor: accentColor }}>
-                                <div className="space-y-4">
-                                    <div className="text-[10px] font-bold uppercase tracking-[0.3em] opacity-60">Contact</div>
-                                    <div className="text-[9px] space-y-2 opacity-90 leading-relaxed font-medium">
-                                        <p>{formData.personalInfo.email}</p>
-                                        <p>{formData.personalInfo.phone}</p>
-                                        <p>{formData.personalInfo.location}</p>
-                                    </div>
-                                </div>
-                                <div className="space-y-4">
-                                    <div className="text-[10px] font-bold uppercase tracking-[0.3em] opacity-60">Expertise</div>
-                                    <div className="flex flex-wrap gap-1.5">
-                                        {formData.skills.technical.map((s, idx) => (
-                                            <span key={idx} className="text-[7px] font-bold px-1.5 py-0.5 bg-white/10 rounded uppercase">{s}</span>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="flex-1 p-12 flex flex-col gap-10">
-                                <header>
-                                    <h1 className="text-4xl font-serif font-bold tracking-tight uppercase leading-none mb-2" style={{ color: accentColor }}>{formData.personalInfo.name || 'YOUR NAME'}</h1>
-                                    <p className="text-[10px] text-gray-500 uppercase tracking-[0.3em] font-bold">Professional Candidate</p>
-                                </header>
-                                <div className="space-y-8 text-[11px] leading-relaxed">
-                                    <div className="space-y-2">
-                                        <SectionHeader title="Summary" color={accentColor} />
-                                        <p className="opacity-80 italic">{formData.summary}</p>
-                                    </div>
-                                    <div className="space-y-4">
-                                        <SectionHeader title="Experience" color={accentColor} />
-                                        {formData.experience.map((exp, i) => (
-                                            <div key={i} className="space-y-1">
-                                                <div className="font-bold uppercase tracking-tight text-[11px]">{exp.role} @ {exp.company}</div>
-                                                <p className="opacity-70 text-[10px] leading-relaxed">{exp.description}</p>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
+                    {/* Simplified Preview Content for real-time visual feedback */}
+                    <div className="flex flex-col gap-6">
+                        <h2 className="text-4xl font-serif font-bold tracking-tight uppercase leading-none" style={{ color: accentColor }}>{formData.personalInfo.name || 'Your Name'}</h2>
+                        <div className="flex flex-col gap-4">
+                            <div className="h-2 w-full bg-gray-50 rounded" />
+                            <div className="h-2 w-2/3 bg-gray-50 rounded" />
+                            <div className="h-20 w-full bg-gray-50/50 rounded-2xl p-4 text-[10px] italic opacity-60 overflow-hidden">
+                                {formData.summary || "Summary goes here..."}
                             </div>
                         </div>
-                    ) : (
-                        // Classic or Minimal
-                        <div className={`flex flex-col gap-10 h-full ${template === 'Minimal' ? 'items-center text-center' : ''}`}>
-                            <header className={`w-full ${template === 'Minimal' ? 'border-none' : 'border-b-2 border-gray-100 pb-8'}`}>
-                                <h1 className="text-6xl font-serif font-bold tracking-tighter uppercase leading-none mb-6" style={{ color: accentColor }}>{formData.personalInfo.name || 'Your Name'}</h1>
-                                <div className="flex justify-center gap-6 text-[10px] font-bold uppercase tracking-widest text-gray-400">
-                                    <span>{formData.personalInfo.email}</span>
-                                    <span>{formData.personalInfo.phone}</span>
-                                </div>
-                            </header>
-
-                            <div className="space-y-12 text-left w-full">
-                                {formData.summary && (
-                                    <div className="space-y-3">
-                                        <SectionHeader title="The Mission" color={accentColor} minimal={template === 'Minimal'} />
-                                        <p className="text-[12px] leading-relaxed italic opacity-80">{formData.summary}</p>
-                                        {!template === 'Minimal' && <div className="h-px w-24 bg-gray-100" />}
-                                    </div>
-                                )}
-                                {formData.projects.length > 0 && (
-                                    <div className="space-y-6">
-                                        <SectionHeader title="Selected Works" color={accentColor} minimal={template === 'Minimal'} />
-                                        <div className="grid grid-cols-1 gap-6">
-                                            {formData.projects.map((p, i) => (
-                                                <div key={i} className="space-y-1">
-                                                    <div className="flex justify-between font-bold text-[13px] uppercase tracking-tight">
-                                                        <span>{p.title}</span>
-                                                        <span className="text-[10px] opacity-40">#{p.techStack[0]}</span>
-                                                    </div>
-                                                    <p className="text-[11px] opacity-70 leading-relaxed font-medium">{p.description}</p>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    )}
+                    </div>
                 </div>
             </div>
 
@@ -366,12 +361,10 @@ const Builder = () => {
             {showToast && (
                 <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-10 fade-in duration-500">
                     <div className="bg-gray-900 border border-white/10 px-8 py-4 rounded-3xl shadow-2xl flex items-center gap-4">
-                        <div className="w-10 h-10 bg-green-500/10 text-green-500 rounded-full flex items-center justify-center">
-                            <CheckCircle2 size={24} />
-                        </div>
+                        <CheckCircle2 size={24} className="text-green-500" />
                         <div>
                             <p className="text-white text-sm font-bold">PDF export ready!</p>
-                            <p className="text-gray-400 text-xs">Check your downloads folder.</p>
+                            <p className="text-gray-400 text-xs text-gray-500">Check your downloads folder.</p>
                         </div>
                     </div>
                 </div>
@@ -379,12 +372,6 @@ const Builder = () => {
         </div>
     );
 };
-
-const SectionHeader = ({ title, color, minimal }) => (
-    <h2 className={`text-[10px] font-bold uppercase tracking-[0.4em] mb-4 ${minimal ? 'text-center opacity-40' : ''}`} style={{ color: minimal ? undefined : color }}>
-        {title}
-    </h2>
-);
 
 const Section = ({ title, children, onAdd }) => (
     <div className="space-y-6">
