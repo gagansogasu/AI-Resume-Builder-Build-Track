@@ -1,16 +1,45 @@
-# React + Vite
+# AI Resume Builder — Build Track
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Welcome to the **AI Resume Builder** development track. This repository contains the core routing, gating system, and premium layout for the project as part of the Placement Readiness Platform.
 
-Currently, two official plugins are available:
+## 🚀 Project Overview
+This project is structured into 8 critical steps following the SDLC (Software Development Life Cycle) to build a robust AI-driven Resume Builder.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### 🛤️ Build Rail
+1. **01-problem**: Problem Statement & Goal Definition
+2. **02-market**: Market Analysis & Competitor Research
+3. **03-architecture**: System Architecture & Data Flow
+4. **04-hld**: High-Level Design (HLD)
+5. **05-lld**: Low-Level Design (LLD)
+6. **06-build**: Core Engine Development
+7. **07-test**: Quality Assurance & Test Protocols
+8. **08-ship**: Deployment & Final Delivery
 
-## React Compiler
+## 🛠️ Tech Stack
+- **Frontend**: React (Vite)
+- **Styling**: Tailwind CSS
+- **Icons**: Lucide React
+- **Routing**: React Router DOM (v7)
+- **Animations**: CSS Transitions & Lucide Icons
 
-The React Compiler is currently not compatible with SWC. See [this issue](https://github.com/vitejs/vite-plugin-react/issues/428) for tracking the progress.
+## 🔒 Gating System
+The application features a built-in gating system that ensures no steps are skipped.
+- Progress is stored in `localStorage`.
+- Each step requires an artifact (build status) to be verified before unlocking the next milestone.
 
-## Expanding the ESLint configuration
+## 🏃 Getting Started
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/gagansogasu/AI-Resume-Builder-Build-Track.git
+   ```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Run the development server:
+   ```bash
+   npm run dev
+   ```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## 📊 Final Submission
+Once all 8 steps are completed, navigate to the `/rb/proof` page to generate your final project payload.
